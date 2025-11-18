@@ -7,6 +7,7 @@ import { mockClients } from "@/data/mockClients";
 import { Client } from "@/types/client";
 import { exportToCSV } from "@/utils/exportCsv";
 import { useToast } from "@/hooks/use-toast";
+import cybaemLogo from "@/assets/cybaem-logo.png";
 
 const Index = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -88,13 +89,20 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-6 py-8 max-w-7xl">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Executive CRM Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            High-level view of all client relationships and project stages
-          </p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Executive CRM Dashboard
+            </h1>
+            <p className="text-muted-foreground">
+              High-level view of all client relationships and project stages
+            </p>
+          </div>
+          <img 
+            src={cybaemLogo} 
+            alt="Cybaem Tech - Beyond Limits" 
+            className="h-16 object-contain"
+          />
         </div>
 
         {/* Metrics Cards */}
