@@ -1,4 +1,5 @@
-import { X, CheckCircle, Calendar } from "lucide-react";
+import { useState } from "react";
+import { FileText, CheckCircle, Calendar } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Client } from "@/types/client";
 import { cn } from "@/lib/utils";
+import { ScheduleFollowupDialog } from "@/components/ScheduleFollowupDialog";
+import { UpdateStatusDialog } from "@/components/UpdateStatusDialog";
+import { AddNoteDialog } from "@/components/AddNoteDialog";
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -21,6 +25,10 @@ export const ClientDetailsDialog = ({
   open,
   onOpenChange,
 }: ClientDetailsDialogProps) => {
+  const [followupDialogOpen, setFollowupDialogOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+
   if (!client) return null;
 
   const getStageColor = (stage: string) => {
@@ -179,18 +187,49 @@ export const ClientDetailsDialog = ({
 
           {/* Action Buttons */}
           <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+              onClick={() => setFollowupDialogOpen(true)}
+            >
+              <Calendar className="h-4 w-4" />
               Schedule Follow-up
             </Button>
-            <Button className="bg-green-600 hover:bg-green-700 text-white">
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white gap-2"
+              onClick={() => setStatusDialogOpen(true)}
+            >
+              <CheckCircle className="h-4 w-4" />
               Update Status
             </Button>
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+            <Button 
+              className="bg-purple-600 hover:bg-purple-700 text-white gap-2"
+              onClick={() => setNoteDialogOpen(true)}
+            >
+              <FileText className="h-4 w-4" />
               Add Note
             </Button>
           </div>
         </div>
       </DialogContent>
+
+      {/* Action Dialogs */}
+      <ScheduleFollowupDialog
+        open={followupDialogOpen}
+        onOpenChange={setFollowupDialogOpen}
+        clientName={client.name}
+      />
+      <UpdateStatusDialog
+        open={statusDialogOpen}
+        onOpenChange={setStatusDialogOpen}
+        clientName={client.name}
+        currentStage={client.stage}
+        currentStatus={client.proposalStatus}
+      />
+      <AddNoteDialog
+        open={noteDialogOpen}
+        onOpenChange={setNoteDialogOpen}
+        clientName={client.name}
+      />
     </Dialog>
   );
 };

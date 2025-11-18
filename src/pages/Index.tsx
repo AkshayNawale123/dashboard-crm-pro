@@ -1,29 +1,84 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MetricCard } from "@/components/MetricCard";
 import { ClientsTable } from "@/components/ClientsTable";
 import { ClientDetailsDialog } from "@/components/ClientDetailsDialog";
+import { FilterBar } from "@/components/FilterBar";
 import { mockClients } from "@/data/mockClients";
 import { Client } from "@/types/client";
+import { exportToCSV } from "@/utils/exportCsv";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [stageFilter, setStageFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const { toast } = useToast();
 
   const handleClientSelect = (client: Client) => {
     setSelectedClient(client);
     setDialogOpen(true);
   };
 
-  // Calculate metrics
-  const totalClients = mockClients.length;
-  const wonClients = mockClients.filter((c) => c.stage === "Won").length;
-  const negotiationClients = mockClients.filter(
+  // Filter and search clients
+  const filteredClients = useMemo(() => {
+    return mockClients.filter((client) => {
+      // Search filter
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch =
+        searchQuery === "" ||
+        client.name.toLowerCase().includes(searchLower) ||
+        client.contactPerson.toLowerCase().includes(searchLower) ||
+        client.email.toLowerCase().includes(searchLower);
+
+      // Stage filter
+      const matchesStage = stageFilter === "all" || client.stage === stageFilter;
+
+      // Status filter
+      const matchesStatus =
+        statusFilter === "all" || client.proposalStatus === statusFilter;
+
+      // Priority filter
+      const matchesPriority =
+        priorityFilter === "all" || client.priority === priorityFilter;
+
+      return matchesSearch && matchesStage && matchesStatus && matchesPriority;
+    });
+  }, [searchQuery, stageFilter, statusFilter, priorityFilter]);
+
+  // Calculate active filters count
+  const activeFiltersCount =
+    (stageFilter !== "all" ? 1 : 0) +
+    (statusFilter !== "all" ? 1 : 0) +
+    (priorityFilter !== "all" ? 1 : 0);
+
+  const clearFilters = () => {
+    setStageFilter("all");
+    setStatusFilter("all");
+    setPriorityFilter("all");
+    setSearchQuery("");
+  };
+
+  const handleExport = () => {
+    exportToCSV(filteredClients);
+    toast({
+      title: "Export Successful",
+      description: `Exported ${filteredClients.length} client(s) to CSV.`,
+    });
+  };
+
+  // Calculate metrics using filtered clients
+  const totalClients = filteredClients.length;
+  const wonClients = filteredClients.filter((c) => c.stage === "Won").length;
+  const negotiationClients = filteredClients.filter(
     (c) => c.proposalStatus === "In Negotiation"
   ).length;
-  const rejectedClients = mockClients.filter(
+  const rejectedClients = filteredClients.filter(
     (c) => c.proposalStatus === "Proposal Rejected"
   ).length;
-  const totalPipeline = mockClients.reduce(
+  const totalPipeline = filteredClients.reduce(
     (sum, client) => sum + client.valueNumeric,
     0
   );
@@ -67,8 +122,23 @@ const Index = () => {
           />
         </div>
 
+        {/* Filter Bar */}
+        <FilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          stageFilter={stageFilter}
+          onStageFilterChange={setStageFilter}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          priorityFilter={priorityFilter}
+          onPriorityFilterChange={setPriorityFilter}
+          onClearFilters={clearFilters}
+          onExport={handleExport}
+          activeFiltersCount={activeFiltersCount}
+        />
+
         {/* Clients Table */}
-        <ClientsTable clients={mockClients} onClientSelect={handleClientSelect} />
+        <ClientsTable clients={filteredClients} onClientSelect={handleClientSelect} />
 
         {/* Client Details Dialog */}
         <ClientDetailsDialog
