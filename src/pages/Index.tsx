@@ -1,16 +1,16 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { MetricCard } from "@/components/MetricCard";
 import { ClientsTable } from "@/components/ClientsTable";
 import { ClientDetailsDialog } from "@/components/ClientDetailsDialog";
 import { FilterBar } from "@/components/FilterBar";
+import { mockClients } from "@/data/mockClients";
+import { Client } from "@/types/client";
 import { exportToCSV } from "@/utils/exportCsv";
 import { useToast } from "@/hooks/use-toast";
 import cybaemLogo from "@/assets/cybaem-logo.png";
-import type { ClientWithHistory } from "@shared/schema";
 
 const Index = () => {
-  const [selectedClient, setSelectedClient] = useState<ClientWithHistory | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
@@ -18,18 +18,14 @@ const Index = () => {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const { toast } = useToast();
 
-  const { data: clients = [], isLoading } = useQuery<ClientWithHistory[]>({
-    queryKey: ["/api/clients"],
-  });
-
-  const handleClientSelect = (client: ClientWithHistory) => {
+  const handleClientSelect = (client: Client) => {
     setSelectedClient(client);
     setDialogOpen(true);
   };
 
   // Filter and search clients
   const filteredClients = useMemo(() => {
-    return clients.filter((client) => {
+    return mockClients.filter((client) => {
       // Search filter
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
@@ -51,7 +47,7 @@ const Index = () => {
 
       return matchesSearch && matchesStage && matchesStatus && matchesPriority;
     });
-  }, [clients, searchQuery, stageFilter, statusFilter, priorityFilter]);
+  }, [searchQuery, stageFilter, statusFilter, priorityFilter]);
 
   // Calculate active filters count
   const activeFiltersCount =
@@ -89,21 +85,13 @@ const Index = () => {
   );
   const formattedPipeline = `$${(totalPipeline / 1000000).toFixed(2)}M`;
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-6 py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="text-page-title">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               Executive CRM Dashboard
             </h1>
             <p className="text-muted-foreground">
@@ -114,7 +102,6 @@ const Index = () => {
             src={cybaemLogo} 
             alt="Cybaem Tech - Beyond Limits" 
             className="h-16 object-contain"
-            data-testid="img-logo"
           />
         </div>
 
